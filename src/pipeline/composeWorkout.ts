@@ -42,7 +42,6 @@ export async function composeWorkout(args: {
 }): Promise<Workout> {
   const model = new ChatAnthropic({
     model: "claude-opus-4-7",
-    temperature: 0.6,
     maxTokens: 3000,
   });
 
