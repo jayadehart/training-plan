@@ -1,0 +1,20 @@
+name: ""
+skillLevel: ""
+position: ""
+height: ""
+dominantHand: ""
+
+equipment:
+  - basketball
+  - hoop
+
+sessionLengthMinutes: 45
+intensity: ""
+
+goals:
+  - ""
+
+constraints:
+  - ""
+
+notes: ""
