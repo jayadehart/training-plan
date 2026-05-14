@@ -4,7 +4,6 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { renderProfile, type Profile } from "../config";
 import type { HistoryContext } from "./loadState";
 import type { ChosenPaper } from "./paperAgent";
 import type { ChosenVideo } from "./videoAgent";
@@ -35,7 +34,7 @@ export type Workout = z.infer<typeof workoutSchema> & { date: string };
 
 export async function composeWorkout(args: {
   date: string;
-  profile: Profile;
+  profile: string;
   history: HistoryContext;
   focus: string;
   paper: ChosenPaper;
@@ -49,7 +48,7 @@ export async function composeWorkout(args: {
 
   const userText = [
     "## Player profile",
-    renderProfile(args.profile),
+    args.profile,
     "",
     "## Recent history",
     args.history.historyText,

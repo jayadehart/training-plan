@@ -3,7 +3,6 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { renderProfile, type Profile } from "../config";
 import type { HistoryContext } from "./loadState";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -13,7 +12,7 @@ const systemPrompt = readFileSync(
 );
 
 export async function pickFocus(
-  profile: Profile,
+  profile: string,
   history: HistoryContext,
 ): Promise<string> {
   const model = new ChatAnthropic({
@@ -24,7 +23,7 @@ export async function pickFocus(
 
   const userText = [
     "## Player profile",
-    renderProfile(profile),
+    profile,
     "",
     "## Recent workout history",
     history.historyText,
