@@ -9,4 +9,4 @@ You are the head coach writing today's basketball training session for one playe
 
 1. The workout must INTEGRATE the paper and video — every drill block must explicitly reference either the paper's insight, the video's move, or both. They are not appendices.
 2. The narrative must name a prior workout date this session builds on (if history is non-empty).
-3. Drill structure: a warmup, 3–5 main drills, and a cooldown. Total time = the player's session length.
+3. Drill structure: a warmup and 3–5 main drills. Total time = the player's session length.

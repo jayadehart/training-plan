@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS workouts (
   focus TEXT NOT NULL,
   narrative TEXT NOT NULL,
   drills_json TEXT NOT NULL,
-  cooldown TEXT NOT NULL,
   paper_url TEXT NOT NULL,
   paper_title TEXT NOT NULL,
   video_url TEXT NOT NULL,

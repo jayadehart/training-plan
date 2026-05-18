@@ -5,7 +5,6 @@ export interface WorkoutRow {
   focus: string;
   narrative: string;
   drills_json: string;
-  cooldown: string;
   paper_url: string;
   paper_title: string;
   video_url: string;
@@ -17,7 +16,6 @@ export interface InsertWorkoutInput {
   focus: string;
   narrative: string;
   drillsJson: string;
-  cooldown: string;
   paper: { url: string; title: string };
   video: { url: string; youtubeId: string; title: string };
   conceptsCovered: string[];
@@ -27,7 +25,7 @@ export function getRecentWorkouts(limit = 6): WorkoutRow[] {
   const db = getDb();
   return db
     .prepare(
-      `SELECT date, focus, narrative, drills_json, cooldown,
+      `SELECT date, focus, narrative, drills_json,
               paper_url, paper_title, video_url, video_title
          FROM workouts
         ORDER BY date DESC
@@ -73,15 +71,14 @@ export function insertWorkout(input: InsertWorkoutInput): void {
     const db = getDb();
     db.prepare(
       `INSERT INTO workouts
-         (date, focus, narrative, drills_json, cooldown,
+         (date, focus, narrative, drills_json,
           paper_url, paper_title, video_url, video_title)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(
       input.date,
       input.focus,
       input.narrative,
       input.drillsJson,
-      input.cooldown,
       input.paper.url,
       input.paper.title,
       input.video.url,

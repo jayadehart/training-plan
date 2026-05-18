@@ -35,7 +35,7 @@ export const workoutSchema = z.object({
     .array(drillSchema)
     .min(3)
     .max(7)
-    .describe("Warmup + 3–5 main drills + cooldown. Total time = session length from profile."),
+    .describe("Warmup + 3–5 main drills. Total time = session length from profile."),
   conceptsCovered: z
     .array(z.string())
     .min(3)

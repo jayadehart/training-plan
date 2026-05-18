@@ -50,9 +50,6 @@ function renderHtml(workout: Workout, paper: ChosenPaper, video: ChosenVideo): s
 
   <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; margin-top: 32px;">Drills</h2>
   ${drills}
-
-  <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; margin-top: 32px;">Cooldown</h2>
-  <p style="font-size: 14px;">${escapeHtml(workout.cooldown)}</p>
 </body>
 </html>`;
 }

@@ -13,7 +13,6 @@ export function persistWorkout(
     focus: workout.focus,
     narrative: workout.narrative,
     drillsJson: JSON.stringify(workout.drills),
-    cooldown: workout.cooldown,
     paper: { url: paper.url, title: paper.title },
     video: { url: video.url, youtubeId: video.youtubeId, title: video.title },
     conceptsCovered: workout.conceptsCovered,
