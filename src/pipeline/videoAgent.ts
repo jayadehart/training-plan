@@ -2,17 +2,14 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage } from "@langchain/core/messages";
 import { createAgent } from "langchain";
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { AgentTraceHandler } from "../observability/traceCallback";
 import { geminiWatchVideoTool } from "../tools/geminiWatchVideo";
 import { youtubeSearchTool } from "../tools/youtubeSearch";
 import { youtubeTranscriptTool } from "../tools/youtubeTranscript";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const promptTemplate = readFileSync(
-  resolve(__dirname, "../prompts/videoAgent.md"),
+  new URL("../prompts/videoAgent.md", import.meta.url),
   "utf-8",
 );
 

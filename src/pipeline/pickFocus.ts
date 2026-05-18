@@ -1,13 +1,10 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { HistoryContext } from "./loadState";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const systemPrompt = readFileSync(
-  resolve(__dirname, "../prompts/pickFocus.md"),
+  new URL("../prompts/pickFocus.md", import.meta.url),
   "utf-8",
 );
 

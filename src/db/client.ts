@@ -1,12 +1,9 @@
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-const DB_PATH = process.env.DB_PATH ?? resolve(__dirname, "../../data/state.db");
-const SCHEMA_PATH = resolve(__dirname, "./schema.sql");
+const DB_PATH = process.env.DB_PATH ?? resolve(import.meta.dirname, "../../data/state.db");
+const SCHEMA_PATH = resolve(import.meta.dirname, "./schema.sql");
 
 let _db: DatabaseSync | null = null;
 
