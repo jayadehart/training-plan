@@ -58,14 +58,12 @@ export async function composeWorkout(args: {
     "## Chosen paper",
     `URL: ${args.paper.url}`,
     `Title: ${args.paper.title}`,
-    `Summary: ${args.paper.summary}`,
-    `Integration hook: ${args.paper.integration}`,
+    `Notes: ${args.paper.notes}`,
     "",
     "## Chosen video",
     `URL: ${args.video.url}`,
     `Title: ${args.video.title}`,
-    `Description: ${args.video.description}`,
-    `Integration hook: ${args.video.integration}`,
+    `Notes: ${args.video.notes}`,
   ].join("\n");
 
   const result = await model.invoke([

@@ -37,7 +37,7 @@ function renderHtml(workout: Workout, paper: ChosenPaper, video: ChosenVideo): s
 
   <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; margin-top: 32px;">Today's reading</h2>
   <a href="${escapeHtml(paper.url)}" style="font-size: 15px; color: #0070f3;">${escapeHtml(paper.title)}</a>
-  <p style="font-size: 14px; color: #333;">${escapeHtml(paper.summary)}</p>
+  <p style="font-size: 14px; color: #333;">${escapeHtml(paper.notes)}</p>
 
   <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; margin-top: 32px;">Today's video</h2>
   <a href="${escapeHtml(video.url)}">
@@ -46,7 +46,7 @@ function renderHtml(workout: Workout, paper: ChosenPaper, video: ChosenVideo): s
   <div style="font-size: 15px; margin-top: 8px;">
     <a href="${escapeHtml(video.url)}" style="color: #0070f3;">${escapeHtml(video.title)}</a>
   </div>
-  <p style="font-size: 14px; color: #333;">${escapeHtml(video.description)}</p>
+  <p style="font-size: 14px; color: #333;">${escapeHtml(video.notes)}</p>
 
   <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; margin-top: 32px;">Drills</h2>
   ${drills}

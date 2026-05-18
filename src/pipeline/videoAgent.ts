@@ -1,9 +1,10 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage } from "@langchain/core/messages";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { createAgent } from "langchain";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { AgentTraceHandler } from "../observability/traceCallback";
 import { geminiWatchVideoTool } from "../tools/geminiWatchVideo";
 import { youtubeSearchTool } from "../tools/youtubeSearch";
@@ -15,41 +16,23 @@ const promptTemplate = readFileSync(
   "utf-8",
 );
 
-export interface ChosenVideo {
-  url: string;
-  youtubeId: string;
-  title: string;
-  description: string;
-  integration: string;
-  rawText: string;
-}
+const videoChoiceSchema = z.object({
+  url: z.url().describe("Full YouTube watch URL, e.g. https://www.youtube.com/watch?v=XXXX"),
+  title: z.string().describe("Video title"),
+  notes: z
+    .string()
+    .describe(
+      "A paragraph describing the move/concept taught, the coach's cues, and how this becomes today's drill block (reps, intensity, focus).",
+    ),
+});
+
+type VideoChoice = z.infer<typeof videoChoiceSchema>;
+export type ChosenVideo = VideoChoice & { youtubeId: string };
 
 function extractYoutubeId(url: string): string {
   const m = /[?&]v=([A-Za-z0-9_-]{11})/.exec(url) ?? /youtu\.be\/([A-Za-z0-9_-]{11})/.exec(url);
   if (!m) throw new Error(`Could not extract YouTube id from URL: ${url}`);
   return m[1] as string;
-}
-
-function parseChoice(text: string): ChosenVideo {
-  const get = (label: string): string => {
-    const m = new RegExp(`^${label}:\\s*(.+?)(?=^[A-Z_]+:|$)`, "ms").exec(text);
-    return (m?.[1] ?? "").trim();
-  };
-  const url = get("CHOICE_URL");
-  const title = get("CHOICE_TITLE");
-  const description = get("CHOICE_DESCRIPTION");
-  const integration = get("INTEGRATION");
-  if (!url || !title) {
-    throw new Error(`videoAgent did not produce a valid choice block:\n${text}`);
-  }
-  return {
-    url,
-    youtubeId: extractYoutubeId(url),
-    title,
-    description,
-    integration,
-    rawText: text,
-  };
 }
 
 export async function runVideoAgent(
@@ -72,10 +55,11 @@ export async function runVideoAgent(
     maxTokens: 2000,
   });
 
-  const agent = createReactAgent({
-    llm: model,
+  const agent = createAgent({
+    model,
     tools: [youtubeSearchTool, youtubeTranscriptTool, geminiWatchVideoTool],
-    stateModifier: systemPrompt,
+    systemPrompt,
+    responseFormat: videoChoiceSchema,
   });
 
   const handler = new AgentTraceHandler(workoutDate, "video");
@@ -87,13 +71,9 @@ export async function runVideoAgent(
     { callbacks: [handler], recursionLimit: 30 },
   );
 
-  const last = result.messages[result.messages.length - 1];
-  const text =
-    typeof last?.content === "string"
-      ? last.content
-      : (last?.content as Array<{ text?: string }> | undefined)
-          ?.map((c) => c.text ?? "")
-          .join("\n") ?? "";
-
-  return parseChoice(text);
+  if (!result.structuredResponse) {
+    throw new Error("videoAgent did not produce a structured response");
+  }
+  const choice = result.structuredResponse;
+  return { ...choice, youtubeId: extractYoutubeId(choice.url) };
 }

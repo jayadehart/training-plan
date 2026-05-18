@@ -1,9 +1,10 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage } from "@langchain/core/messages";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { createAgent } from "langchain";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { AgentTraceHandler } from "../observability/traceCallback";
 import { arxivSearchTool } from "../tools/arxivSearch";
 import { semanticScholarSearchTool } from "../tools/semanticScholarSearch";
@@ -15,28 +16,17 @@ const promptTemplate = readFileSync(
   "utf-8",
 );
 
-export interface ChosenPaper {
-  url: string;
-  title: string;
-  summary: string;
-  integration: string;
-  rawText: string;
-}
+const paperChoiceSchema = z.object({
+  url: z.url().describe("Full URL of the chosen paper or article"),
+  title: z.string().describe("Title of the paper or article"),
+  notes: z
+    .string()
+    .describe(
+      "A paragraph describing the key insight and the specific cue or rule of thumb a coach could weave into a drill today.",
+    ),
+});
 
-function parseChoice(text: string): ChosenPaper {
-  const get = (label: string): string => {
-    const m = new RegExp(`^${label}:\\s*(.+?)(?=^[A-Z_]+:|$)`, "ms").exec(text);
-    return (m?.[1] ?? "").trim();
-  };
-  const url = get("CHOICE_URL");
-  const title = get("CHOICE_TITLE");
-  const summary = get("CHOICE_SUMMARY");
-  const integration = get("INTEGRATION");
-  if (!url || !title) {
-    throw new Error(`paperAgent did not produce a valid choice block:\n${text}`);
-  }
-  return { url, title, summary, integration, rawText: text };
-}
+export type ChosenPaper = z.infer<typeof paperChoiceSchema>;
 
 export async function runPaperAgent(
   focus: string,
@@ -58,10 +48,11 @@ export async function runPaperAgent(
     maxTokens: 2000,
   });
 
-  const agent = createReactAgent({
-    llm: model,
+  const agent = createAgent({
+    model,
     tools: [arxivSearchTool, semanticScholarSearchTool, webSearchTool, fetchUrlTool],
-    stateModifier: systemPrompt,
+    systemPrompt,
+    responseFormat: paperChoiceSchema,
   });
 
   const handler = new AgentTraceHandler(workoutDate, "paper");
@@ -73,13 +64,8 @@ export async function runPaperAgent(
     { callbacks: [handler], recursionLimit: 30 },
   );
 
-  const last = result.messages[result.messages.length - 1];
-  const text =
-    typeof last?.content === "string"
-      ? last.content
-      : (last?.content as Array<{ text?: string }> | undefined)
-          ?.map((c) => c.text ?? "")
-          .join("\n") ?? "";
-
-  return parseChoice(text);
+  if (!result.structuredResponse) {
+    throw new Error("paperAgent did not produce a structured response");
+  }
+  return result.structuredResponse;
 }
