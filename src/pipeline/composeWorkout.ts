@@ -1,7 +1,7 @@
 import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { readFileSync } from "node:fs";
-import { z } from "zod";
+import { composedWorkoutSchema, type Workout } from "../workout";
 import type { HistoryContext } from "./loadState";
 import type { ChosenPaper } from "./paperAgent";
 import type { ChosenVideo } from "./videoAgent";
@@ -11,42 +11,6 @@ const systemPrompt = readFileSync(
   "utf-8",
 );
 
-export const drillSchema = z.object({
-  name: z.string().describe("Short name for the drill block"),
-  duration: z.number().positive().describe("Duration in minutes"),
-  sets: z.string().describe('Sets/reps format, e.g. "3x10" or "AMRAP 5min"'),
-  cues: z.string().describe("1–3 sentences of specific coaching cues"),
-  references: z
-    .array(z.string())
-    .min(1)
-    .describe(
-      'Which sources this drill draws from, e.g. ["paper", "video", "prior:2026-05-08"]',
-    ),
-});
-
-export const workoutSchema = z.object({
-  focus: z.string().describe("Today's focus, restated concisely"),
-  narrative: z
-    .string()
-    .describe(
-      "2–4 sentences weaving paper + video + history. Must name a prior workout date this builds on if history is non-empty.",
-    ),
-  drills: z
-    .array(drillSchema)
-    .min(3)
-    .max(7)
-    .describe("Warmup + 3–5 main drills. Total time = session length from profile."),
-  conceptsCovered: z
-    .array(z.string())
-    .min(3)
-    .max(8)
-    .describe(
-      'Specific concept tags the next session will read as history, e.g. "split-step footwork", "elastic landing"',
-    ),
-});
-
-export type Workout = z.infer<typeof workoutSchema> & { date: string };
-
 export async function composeWorkout(args: {
   date: string;
   profile: string;
@@ -55,11 +19,10 @@ export async function composeWorkout(args: {
   paper: ChosenPaper;
   video: ChosenVideo;
 }): Promise<Workout> {
-
   const model = new ChatAnthropic({
     model: "claude-opus-4-7",
     maxTokens: 3000,
-  }).withStructuredOutput(workoutSchema);
+  }).withStructuredOutput(composedWorkoutSchema);
 
   const userText = [
     "## Player profile",
@@ -82,9 +45,24 @@ export async function composeWorkout(args: {
     `Notes: ${args.video.notes}`,
   ].join("\n");
 
-  const parsed = await model.invoke([
+  const composed = await model.invoke([
     new SystemMessage(systemPrompt),
     new HumanMessage(userText),
   ]);
-  return { ...parsed, date: args.date };
+
+  return {
+    ...composed,
+    date: args.date,
+    paper: {
+      url: args.paper.url,
+      title: args.paper.title,
+      notes: args.paper.notes,
+    },
+    video: {
+      url: args.video.url,
+      title: args.video.title,
+      youtubeId: args.video.youtubeId,
+      notes: args.video.notes,
+    },
+  };
 }

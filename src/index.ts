@@ -2,11 +2,11 @@ import "dotenv/config";
 import { parseArgs } from "node:util";
 import { loadProfile } from "./config";
 import { closeDb } from "./db/client";
+import { insertWorkout } from "./db/queries";
 import { configureLangSmith } from "./observability/langsmith";
 import { composeWorkout } from "./pipeline/composeWorkout";
 import { loadState } from "./pipeline/loadState";
 import { runPaperAgent } from "./pipeline/paperAgent";
-import { persistWorkout } from "./pipeline/persist";
 import { pickFocus } from "./pipeline/pickFocus";
 import { sendEmail } from "./pipeline/sendEmail";
 import { runVideoAgent } from "./pipeline/videoAgent";
@@ -63,8 +63,8 @@ async function main(): Promise<void> {
   if (!to) throw new Error("No recipient — set EMAIL_TO or pass --to");
 
   console.log(`\n[5/5] Sending email to ${to} and persisting...`);
-  await sendEmail({ workout, paper, video, to });
-  persistWorkout(workout, paper, video);
+  await sendEmail({ workout, to });
+  insertWorkout(workout);
 
   console.log("\nDone.");
 }

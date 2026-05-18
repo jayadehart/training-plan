@@ -1,7 +1,5 @@
 import { Resend } from "resend";
-import type { Workout } from "./composeWorkout";
-import type { ChosenPaper } from "./paperAgent";
-import type { ChosenVideo } from "./videoAgent";
+import type { Workout } from "../workout";
 
 function escapeHtml(s: string): string {
   return s
@@ -11,8 +9,8 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function renderHtml(workout: Workout, paper: ChosenPaper, video: ChosenVideo): string {
-  const thumbnail = `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`;
+function renderHtml(workout: Workout): string {
+  const thumbnail = `https://img.youtube.com/vi/${workout.video.youtubeId}/hqdefault.jpg`;
 
   const drills = workout.drills
     .map(
@@ -36,17 +34,17 @@ function renderHtml(workout: Workout, paper: ChosenPaper, video: ChosenVideo): s
   <p style="font-size: 15px; line-height: 1.5;">${escapeHtml(workout.narrative)}</p>
 
   <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; margin-top: 32px;">Today's reading</h2>
-  <a href="${escapeHtml(paper.url)}" style="font-size: 15px; color: #0070f3;">${escapeHtml(paper.title)}</a>
-  <p style="font-size: 14px; color: #333;">${escapeHtml(paper.notes)}</p>
+  <a href="${escapeHtml(workout.paper.url)}" style="font-size: 15px; color: #0070f3;">${escapeHtml(workout.paper.title)}</a>
+  <p style="font-size: 14px; color: #333;">${escapeHtml(workout.paper.notes)}</p>
 
   <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; margin-top: 32px;">Today's video</h2>
-  <a href="${escapeHtml(video.url)}">
-    <img src="${thumbnail}" alt="${escapeHtml(video.title)}" style="max-width: 100%; border-radius: 8px;" />
+  <a href="${escapeHtml(workout.video.url)}">
+    <img src="${thumbnail}" alt="${escapeHtml(workout.video.title)}" style="max-width: 100%; border-radius: 8px;" />
   </a>
   <div style="font-size: 15px; margin-top: 8px;">
-    <a href="${escapeHtml(video.url)}" style="color: #0070f3;">${escapeHtml(video.title)}</a>
+    <a href="${escapeHtml(workout.video.url)}" style="color: #0070f3;">${escapeHtml(workout.video.title)}</a>
   </div>
-  <p style="font-size: 14px; color: #333;">${escapeHtml(video.notes)}</p>
+  <p style="font-size: 14px; color: #333;">${escapeHtml(workout.video.notes)}</p>
 
   <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; margin-top: 32px;">Drills</h2>
   ${drills}
@@ -56,8 +54,6 @@ function renderHtml(workout: Workout, paper: ChosenPaper, video: ChosenVideo): s
 
 export interface SendEmailOptions {
   workout: Workout;
-  paper: ChosenPaper;
-  video: ChosenVideo;
   to: string;
   from?: string;
 }
@@ -69,7 +65,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
   const from = opts.from ?? process.env.EMAIL_FROM ?? "training-plan@resend.dev";
 
   const subject = `Workout — ${opts.workout.date} — ${opts.workout.focus.slice(0, 60)}`;
-  const html = renderHtml(opts.workout, opts.paper, opts.video);
+  const html = renderHtml(opts.workout);
 
   const { error } = await resend.emails.send({
     from,

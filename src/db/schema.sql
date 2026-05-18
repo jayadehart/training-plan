@@ -1,13 +1,6 @@
 CREATE TABLE IF NOT EXISTS workouts (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  date TEXT NOT NULL UNIQUE,
-  focus TEXT NOT NULL,
-  narrative TEXT NOT NULL,
-  drills_json TEXT NOT NULL,
-  paper_url TEXT NOT NULL,
-  paper_title TEXT NOT NULL,
-  video_url TEXT NOT NULL,
-  video_title TEXT NOT NULL,
+  date TEXT PRIMARY KEY,
+  data TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -25,16 +18,6 @@ CREATE TABLE IF NOT EXISTS used_videos (
   workout_date TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE TABLE IF NOT EXISTS concepts (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  workout_date TEXT NOT NULL,
-  concept TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (workout_date) REFERENCES workouts(date)
-);
-
-CREATE INDEX IF NOT EXISTS idx_concepts_workout_date ON concepts(workout_date);
 
 CREATE TABLE IF NOT EXISTS agent_traces (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

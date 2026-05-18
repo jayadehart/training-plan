@@ -1,53 +1,12 @@
+import { persistedWorkoutSchema, type Workout } from "../workout";
 import { getDb, withTransaction } from "./client";
 
-export interface WorkoutRow {
-  date: string;
-  focus: string;
-  narrative: string;
-  drills_json: string;
-  paper_url: string;
-  paper_title: string;
-  video_url: string;
-  video_title: string;
-}
-
-export interface InsertWorkoutInput {
-  date: string;
-  focus: string;
-  narrative: string;
-  drillsJson: string;
-  paper: { url: string; title: string };
-  video: { url: string; youtubeId: string; title: string };
-  conceptsCovered: string[];
-}
-
-export function getRecentWorkouts(limit = 6): WorkoutRow[] {
+export function getRecentWorkouts(limit = 6): Workout[] {
   const db = getDb();
-  return db
-    .prepare(
-      `SELECT date, focus, narrative, drills_json,
-              paper_url, paper_title, video_url, video_title
-         FROM workouts
-        ORDER BY date DESC
-        LIMIT ?`,
-    )
-    .all(limit) as unknown as WorkoutRow[];
-}
-
-export function getConceptsForDates(dates: string[]): Record<string, string[]> {
-  if (dates.length === 0) return {};
-  const db = getDb();
-  const placeholders = dates.map(() => "?").join(",");
   const rows = db
-    .prepare(
-      `SELECT workout_date, concept FROM concepts WHERE workout_date IN (${placeholders})`,
-    )
-    .all(...dates) as unknown as Array<{ workout_date: string; concept: string }>;
-  const out: Record<string, string[]> = {};
-  for (const row of rows) {
-    (out[row.workout_date] ??= []).push(row.concept);
-  }
-  return out;
+    .prepare(`SELECT data FROM workouts ORDER BY date DESC LIMIT ?`)
+    .all(limit) as unknown as Array<{ data: string }>;
+  return rows.map((r) => persistedWorkoutSchema.parse(JSON.parse(r.data)));
 }
 
 export function getUsedPaperUrls(): Set<string> {
@@ -66,40 +25,22 @@ export function getUsedVideoIds(): Set<string> {
   return new Set(rows.map((r) => r.youtube_id));
 }
 
-export function insertWorkout(input: InsertWorkoutInput): void {
+export function insertWorkout(workout: Workout): void {
   withTransaction(() => {
     const db = getDb();
-    db.prepare(
-      `INSERT INTO workouts
-         (date, focus, narrative, drills_json,
-          paper_url, paper_title, video_url, video_title)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    ).run(
-      input.date,
-      input.focus,
-      input.narrative,
-      input.drillsJson,
-      input.paper.url,
-      input.paper.title,
-      input.video.url,
-      input.video.title,
+    db.prepare(`INSERT INTO workouts (date, data) VALUES (?, ?)`).run(
+      workout.date,
+      JSON.stringify(workout),
     );
 
     db.prepare(
       `INSERT OR IGNORE INTO used_papers (url, title, workout_date) VALUES (?, ?, ?)`,
-    ).run(input.paper.url, input.paper.title, input.date);
+    ).run(workout.paper.url, workout.paper.title, workout.date);
 
     db.prepare(
       `INSERT OR IGNORE INTO used_videos (youtube_id, url, title, workout_date)
        VALUES (?, ?, ?, ?)`,
-    ).run(input.video.youtubeId, input.video.url, input.video.title, input.date);
-
-    const conceptStmt = db.prepare(
-      `INSERT INTO concepts (workout_date, concept) VALUES (?, ?)`,
-    );
-    for (const concept of input.conceptsCovered) {
-      conceptStmt.run(input.date, concept);
-    }
+    ).run(workout.video.youtubeId, workout.video.url, workout.video.title, workout.date);
   });
 }
 
