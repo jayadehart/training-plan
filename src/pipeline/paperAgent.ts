@@ -46,6 +46,7 @@ export async function runPaperAgent(
   });
 
   const agent = createAgent({
+    name:'paper-agent',
     model,
     tools: [arxivSearchTool, semanticScholarSearchTool, webSearchTool, fetchUrlTool],
     systemPrompt,

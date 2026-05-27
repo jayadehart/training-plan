@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "agent": "./src/agents/paperAgent.ts:paperGraph"
+  },
+  "env": ".env"
+}
