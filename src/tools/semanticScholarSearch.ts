@@ -1,7 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 
-const SS_BULK_API = "https://api.semanticscholar.org/graph/v1/paper/search/bulk";
+const SS_API = "https://api.semanticscholar.org/graph/v1/paper/search";
 
 interface SsPaper {
   paperId: string;
@@ -18,10 +18,10 @@ export const semanticScholarSearchTool = tool(
   async ({ query, maxResults }) => {
     const params = new URLSearchParams({
       query,
+      limit: String(maxResults),
       fields: "title,abstract,authors,year,url,venue,openAccessPdf",
-      sort: "citationCount:desc",
     });
-    const url = `${SS_BULK_API}?${params.toString()}&openAccessPdf`;
+    const url = `${SS_API}?${params.toString()}&openAccessPdf`;
     const res = await fetch(url, {
       headers: process.env.SEMANTIC_SCHOLAR_API_KEY
         ? { "x-api-key": process.env.SEMANTIC_SCHOLAR_API_KEY }
@@ -29,7 +29,7 @@ export const semanticScholarSearchTool = tool(
     });
     if (!res.ok) throw new Error(`SemanticScholar ${res.status}: ${await res.text()}`);
     const data = (await res.json()) as { data?: SsPaper[] };
-    const papers = (data.data ?? []).slice(0, maxResults);
+    const papers = data.data ?? [];
     return JSON.stringify(
       papers.map((p) => ({
         url: p.url,
@@ -45,7 +45,7 @@ export const semanticScholarSearchTool = tool(
   {
     name: "semantic_scholar_search",
     description:
-      "Search Semantic Scholar (bulk endpoint, sorted by citation count) for open-access academic papers across sports science, motor learning, skill acquisition, etc. Only returns papers with an accessible PDF.",
+      "Search Semantic Scholar (relevance-ranked) for open-access academic papers across sports science, motor learning, skill acquisition, etc. Only returns papers with an accessible PDF.",
     schema: z.object({
       query: z.string(),
       maxResults: z.number().int().min(1).max(15).default(5),
